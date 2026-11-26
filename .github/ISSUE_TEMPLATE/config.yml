@@ -1,0 +1,15 @@
+# 关闭空白 Issue，按问题类型提供对应入口。
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞报告 / Security vulnerability
+    url: https://github.com/AlonaBot/AlonaBot/security/advisories/new
+    about: 通过私密报告提交漏洞、影响范围和复现步骤，请先移除凭证与真实用户数据。
+  - name: 讨论区 / Discussions
+    url: https://github.com/AlonaBot/AlonaBot/discussions
+    about: 使用求助、方案交流和开放讨论请前往讨论区。
+  - name: Wiki
+    url: https://github.com/AlonaBot/AlonaBot/wiki
+    about: 按使用、插件开发和贡献任务查找文档。
+  - name: 文档 / Documentation
+    url: https://github.com/owner/alonabot-plugin-template/blob/main/docs/usage.md
+    about: 使用问题请先查阅文档。Please check the documentation for usage questions.

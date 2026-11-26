@@ -1,0 +1,9 @@
+# 发布前把 id、name、description、author 与 source 改成你的插件。
+# id 使用市场前缀 alonabot-plugin-，后面只用小写字母、数字与连字符。
+id: alonabot-plugin-template
+name: alonabot-plugin-template
+description: A starting point for AlonaBot plugins
+version: 0.1.0
+author: owner
+source: github.com/owner/alonabot-plugin-template
+role: plugin

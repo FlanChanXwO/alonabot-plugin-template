@@ -1,0 +1,13 @@
+# 按仓库真实路径分配区域标签；标签由维护者统一建立。
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file: ["*.md"]
+"area: tests":
+  - changed-files:
+      - any-glob-to-any-file: ["**/*_test.go"]
+"area: github-actions":
+  - changed-files:
+      - any-glob-to-any-file: [".github/**", "scripts/**"]
+"area: plugin":
+  - changed-files:
+      - any-glob-to-any-file: ["plugin.go", "plugin.yaml", "plugin_config_schema.json", "go.mod", "go.sum"]

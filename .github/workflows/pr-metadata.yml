@@ -1,0 +1,58 @@
+# 从受信 workflow 校验 PR 说明；PR 正文只作为数据读取，不 checkout 或执行 PR 代码。
+name: PR metadata
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+jobs:
+  metadata:
+    name: PR description
+    if: github.event.pull_request.state == 'open' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR sections and checklist
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          node --input-type=module <<'JS'
+          // 本脚本校验说明结构；确认项是否真实由审阅者判断。
+          import assert from 'node:assert/strict';
+
+          assert.match(process.env.PR_TITLE || '', /^(feat|fix|docs|refactor|test|ci|build|chore|perf|revert)\/[a-z0-9]+(?:-[a-z0-9]+)*: \S.*$/, 'PR 标题须为 type/scope: 摘要');
+
+          // 1. 移除模板提示和代码块，避免提示文字或示例被当作实际说明。
+          const body = (process.env.PR_BODY || '')
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '[代码块]');
+
+          // 2. 每个约定段落都必须有实际内容；接受英文或中文标题，以及中文后的英文后缀。
+          for (const heading of ['(?:变更与原因|Changes)', '(?:验证|Verification)', '(?:兼容性与风险|Compatibility and risks)']) {
+            const section = body.match(new RegExp(`^## ${heading}(?: / [^\\n]*)?\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'));
+            assert.ok(section && section[1].trim(), `缺少实际说明：${heading}`);
+          }
+
+          // 3. 对照模板逐项确认，避免用无关勾选绕过必填清单。
+          const checklist = [
+            '改动在已确认范围内，不含凭据、真实用户数据或本地临时测试',
+            'The change stays within the confirmed scope and contains no credentials, real user data or local temporary tests',
+            '没有新增依赖，或已取得维护者明确批准并说明用途',
+            'No new dependencies, or a maintainer approved them and their purpose is stated',
+            '已按编码规范检查包文档、命名、注释与测试提交范围，或本次不涉及代码',
+            'Package docs, naming, comments and committed test scope follow the coding standards, or this change has no code',
+            '相关契约、文档和生成源已同步，或本次不需要同步',
+            'Related contracts, documentation and generated sources are in sync, or no sync was needed',
+          ];
+          // 清单接受对应的中文或英文前缀，并允许追加另一语言。
+          const lines = body.split('\n').map(line => line.trim());
+          for (let i = 0; i < checklist.length; i += 2) {
+            const alternatives = checklist.slice(i, i + 2);
+            assert.ok(
+              lines.some(line => (line.startsWith('- [x] ') || line.startsWith('- [X] ')) && alternatives.some(item => line.slice(6).startsWith(item))),
+              `尚未确认：${alternatives[0]}`);
+          }
+          JS

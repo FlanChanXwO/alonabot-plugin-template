@@ -1,0 +1,27 @@
+# 只写 GitHub 标签和 assignee，不 checkout、不运行 PR 提交的代码。
+name: PR triage
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync path labels
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9
+        with:
+          configuration-path: .github/labeler.yml
+          repo-token: ${{ github.token }}
+          sync-labels: true
+      - name: Assign maintainer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr edit "$PR_URL" --add-assignee owner

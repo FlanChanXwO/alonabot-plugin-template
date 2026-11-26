@@ -1,0 +1,11 @@
+# alonabot run 的数据目录与本地构建产物
+data/
+bin/
+build/
+dist/
+.alonabot/
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+.DS_Store

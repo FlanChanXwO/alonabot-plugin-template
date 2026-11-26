@@ -1,0 +1,137 @@
+# 按提交范围检查仓库、Go、前端和组件声明。
+name: Component quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  repository:
+    name: Repository
+    runs-on: ubuntu-latest
+    outputs:
+      has_go: ${{ steps.changed-files.outputs.has_go }}
+      has_frontend: ${{ steps.changed-files.outputs.has_frontend }}
+      has_component: ${{ steps.changed-files.outputs.has_component }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check main branch file scope
+        if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files -z > "$RUNNER_TEMP/main-paths"
+          rejected=0
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              .agents/*|.claude/*|.codex/*|.serena/*|.playwright-cli/*|docs/goals/*|docs/execution-order.md|docs/benchmarks.md|spec/*|goal-[0-9]*/*|delegation-skills-workspace/*|experiments/*)
+                printf 'main 包含个人维护资料：%q\n' "$path"
+                rejected=1
+                ;;
+            esac
+          done < "$RUNNER_TEMP/main-paths"
+          exit "$rejected"
+      - name: Check whitespace and select checks
+        id: changed-files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_go=false
+          has_frontend=false
+          has_component=false
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            has_go=true
+            has_component=true
+            BASE_SHA=$(git rev-parse HEAD^ 2>/dev/null || true)
+          fi
+          if [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            git log --format= --check HEAD
+            git ls-files -z > "$RUNNER_TEMP/changed-files"
+          else
+            git diff --check "$BASE_SHA" HEAD
+            git diff --name-only -z "$BASE_SHA" HEAD > "$RUNNER_TEMP/changed-files"
+          fi
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              *.go|go.mod|go.sum|.github/workflows/ci.yml) has_go=true ;;
+            esac
+            case "$path" in
+              plugin.yaml|*schema*.json|i18n/*|changelog/*|CHANGELOG*|*.go|go.mod|go.sum|scripts/*|.github/workflows/*) has_component=true ;;
+            esac
+          done < "$RUNNER_TEMP/changed-files"
+          {
+            echo "has_go=$has_go"
+            echo "has_frontend=$has_frontend"
+            echo "has_component=$has_component"
+          } >> "$GITHUB_OUTPUT"
+  quality:
+    name: Component checks
+    needs: repository
+    if: needs.repository.outputs.has_go == 'true' || needs.repository.outputs.has_frontend == 'true' || needs.repository.outputs.has_component == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        if: needs.repository.outputs.has_go == 'true' || needs.repository.outputs.has_component == 'true'
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Update SDK to latest
+        if: needs.repository.outputs.has_go == 'true' || needs.repository.outputs.has_component == 'true'
+        run: go get github.com/AlonaBot/AlonaBot@latest
+
+      - name: Check Go formatting
+        if: needs.repository.outputs.has_go == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          unformatted=$(git ls-files -z -- '*.go' | xargs -0 gofmt -l)
+          if [ -n "$unformatted" ]; then
+            printf '%s\n' "$unformatted"
+            exit 1
+          fi
+      - name: Run static analysis
+        if: needs.repository.outputs.has_go == 'true'
+        run: go vet ./...
+      - name: Run tests with race detection
+        if: needs.repository.outputs.has_go == 'true'
+        env:
+          CGO_ENABLED: '1'
+        run: go test -race ./...
+      - name: Build pure Go for five platforms
+        if: needs.repository.outputs.has_go == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for target in linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64; do
+            echo "构建 $target"
+            GOOS=${target%/*} GOARCH=${target#*/} CGO_ENABLED=0 go build ./...
+          done
+      - name: Build matching SDK CLI with component toolchain
+        if: needs.repository.outputs.has_component == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          go mod download github.com/AlonaBot/AlonaBot
+          env GOTOOLCHAIN="$(go env GOVERSION)" go -C "$(go list -m -f '{{.Dir}}' github.com/AlonaBot/AlonaBot)" install ./cmd/alonabot
+      - name: Check component
+        if: needs.repository.outputs.has_component == 'true'
+        run: alonabot check .
+      - name: Load plugin offline
+        if: needs.repository.outputs.has_component == 'true'
+        run: alonabot test .

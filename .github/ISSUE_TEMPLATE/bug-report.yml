@@ -1,0 +1,39 @@
+# Bug 报告表单：只收集定位问题所需的最少信息，并指派维护者跟进。
+name: Bug 报告 / Bug report
+description: 报告可以复现的问题。Report a problem you can reproduce.
+title: "[Bug] "
+labels: [bug]
+assignees: [owner]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先删除 Bot Token、密码和真实用户数据。
+        Please remove bot tokens, passwords and real user data before posting.
+  - type: textarea
+    id: problem
+    attributes:
+      label: 发生了什么 / What happened
+      description: 期望的结果和实际的结果。What you expected and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      placeholder: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本与系统 / Version and OS
+      placeholder: v0.2.0 or commit SHA / 或提交号, linux/amd64
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs
+      description: 可选，粘贴相关的错误信息。Optional. Paste the relevant error output.
+      render: text
