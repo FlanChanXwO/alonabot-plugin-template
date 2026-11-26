@@ -1,0 +1,5 @@
+# 本文件提供技能选择界面的名称、简述及入口提示。
+interface:
+  display_name: "插件PR"
+  short_description: "在已授权范围内准备和交付 PR，核对当前提交的检查与失败原因。"
+  default_prompt: "使用 $alonabot-pr 完成本次任务。"

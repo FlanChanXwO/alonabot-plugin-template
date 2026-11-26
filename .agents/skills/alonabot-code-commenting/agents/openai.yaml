@@ -1,0 +1,5 @@
+# 本文件提供技能选择界面的名称、简述及入口提示。
+interface:
+  display_name: "AlonaBot 注释"
+  short_description: "按编码规范写包文档、文档注释、必要的字段注释和 step 注释，保留编译与生成指令。"
+  default_prompt: "使用 $alonabot-code-commenting 完成本次 AlonaBot 项目任务。"

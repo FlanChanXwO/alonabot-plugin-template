@@ -1,82 +1,65 @@
-# alonabot-plugin-template
+# AlonaBot Go plugin template
 
-[简体中文](README.zh-CN.md)
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-A project template for developing AlonaBot plugins. It demonstrates the same hello example as `alonabot init`, plugintest integration tests, and five-platform packaging with GitHub Releases.
+Create an AlonaBot Go plugin with the Core coding standards, integration testing, i18n, bilingual documentation and GitHub automation already in place. This repository is intended to be published as `FlanChanXwO/alonabot-plugin-template`, based on the organization template `AlonaBot/alonabot-plugin-template`. Official and personal plugins can use the same layout and contribution workflow.
 
-## Create a plugin project
+## Create your plugin
 
-1. Select [Use this template](https://github.com/new?template_owner=AlonaBot&template_name=alonabot-plugin-template), then clone your new repository.
-2. Set the `module` in `go.mod` to your repository path and update imports of this project. Keep the SDK path `github.com/AlonaBot/AlonaBot` unchanged.
-3. Update `id`, `name`, `description`, `author`, and `source` in `plugin.yaml`. Use the `alonabot-plugin-` prefix followed by lowercase letters, digits, and hyphens for `id`. Set `source` to `github.com/<account>/<repository>`; the release script checks it against the actual repository.
-4. Replace the `owner` assignee placeholder in `.github/`, choose a license, and add `LICENSE`. Replace both READMEs with development and usage instructions for your plugin.
+1. Choose **Use this template → Create a new repository** on GitHub. Name the repository `alonabot-plugin-<name>`.
+2. Clone your new repository and run the rename script from its root:
 
-## Set up the SDK and CLI
+```fish
+bash scripts/rename.sh AlonaBot builtin
+```
 
-Install the Go version declared in `go.mod`, then fetch the latest SDK and install the CLI:
+This example prepares `AlonaBot/alonabot-plugin-builtin`. For a personal plugin, supply your account and a lowercase short name such as `my-plugin`; omit the `alonabot-plugin-` prefix. Hyphens are removed from the Go package name (`myplugin`). The script runs once on an unrenamed template and uses ordinary file moves.
 
-**Bash (Linux / macOS)**
+Review these replacements before developing:
 
-```bash
+| Location | Replace or review |
+| --- | --- |
+| [go.mod](go.mod), Go imports | `github.com/OWNER/alonabot-plugin-example` → your module path |
+| [plugin.go](plugin.go), [plugin_test.go](plugin_test.go), [internal/example](internal/example) | `example` package and implementation directory → your Go package name |
+| [cmd/alonabot-plugin-example](cmd/alonabot-plugin-example) | executable directory → `alonabot-plugin-<name>` |
+| [plugin.yaml](plugin.yaml) | ID, name, author, source and description; source must match the new repository |
+| [LICENSE](LICENSE) | `OWNER` and copyright year |
+| Documentation, public skills and GitHub settings | renamed paths, project introduction, labels, optional assignees and repository URLs |
+
+The script replaces the module path, imports, package names, directories, plugin ID/name/source/author, copyright holder and matching public text. Edit the description, copyright year and project-specific documentation yourself. Instructions for manual replacement are in [development](docs/development.md).
+
+## Run the example
+
+Use the Go version declared in `go.mod` (managed with asdf locally). Keep the template's SDK declaration `latest` and obtain it with the same command used in CI:
+
+```fish
 go get github.com/AlonaBot/AlonaBot@latest
-go install github.com/AlonaBot/AlonaBot/cmd/alonabot@latest
+go mod download github.com/AlonaBot/AlonaBot
+env GOTOOLCHAIN=(go env GOVERSION) go -C (go list -m -f '{{.Dir}}' github.com/AlonaBot/AlonaBot) install ./cmd/alonabot
+alonabot run . --data-dir ./data
 ```
 
-**PowerShell (Windows)**
+Add the Go bin directory to PATH. Type `/hello` in the interactive terminal: the default reply is `Hello AlonaBot`. Development mode reloads source changes. Configuration, supported locales and platform usage are described in [usage](docs/usage.md).
 
-```powershell
-go get github.com/AlonaBot/AlonaBot@latest
-go install github.com/AlonaBot/AlonaBot/cmd/alonabot@latest
-```
+Go resolves `latest` to a concrete version and updates `go.mod`/`go.sum`. Review those changes in your derived repository. CI and releases retain the organization template's `go get ...@latest` step.
 
-## Write commands
+## Develop, test and release
 
-- `plugin.go`: `New` creates the plugin and registers the hello command.
-- `plugin_config_schema.json`: configuration declarations, initially empty.
-- `plugin_test.go`: command reply tests using a real Core and test Adapter.
-- `plugin.yaml`: plugin identity, version, and source.
-- `scripts/release.sh`: version and source checks, followed by five-platform packaging.
+`plugin.go` constructs the plugin, `internal/example/register.go` registers all commands, `internal/example/handler/` holds one file per command, and business logic belongs to `internal/example/`. `cmd/alonabot-plugin-example/main.go` calls `sdk.Run`. Commands use the root plugin directly.
 
-The `hello` command is registered with:
-
-```go
-p.Command("hello").Menu().Description("Show a greeting").Handle(func(c *sdk.Context) error {
-    return c.Reply("Hello AlonaBot")
-})
-```
-
-The handler replies with `c.Reply("Hello AlonaBot")`; `.Menu()` adds the command to automatic menus.
-
-To add a command, register its handler in `New`, add configuration declarations as needed, and verify replies and failure paths in `plugin_test.go`. Split implementation files by feature as the plugin grows.
-
-## Debug and check locally
-
-```bash
-alonabot run --reload .
-```
-
-This starts Core with the plugin and rebuilds it when source files change. Runtime data is stored in the ignored `data/` directory. Send `/hello` on a connected chat platform to try the example; the command prefix follows Core configuration.
-
-Before submitting, select checks for the affected behavior using the [contribution guide](CONTRIBUTING.md#verify-changes). `go test` runs integration tests, `alonabot check .` validates component declarations, and `alonabot test .` checks offline loading and registration.
-
-## Package and release
-
-Build a package for one platform locally:
-
-```bash
+```fish
+go build ./...
+go vet ./...
+go test ./...
+alonabot check .
+alonabot test .
 alonabot pack . --target linux/amd64 --out bin
 ```
 
-To publish from your own repository:
+[plugin_test.go](plugin_test.go) is an integration test using real Core and a test Adapter. For releases, update `plugin.yaml` and both `changelog/<version>/en-US.md` and `zh-CN.md`, then push a matching `v*` tag. The release workflow packages five platforms using `scripts/release.sh` and publishes bilingual notes.
 
-1. Update `version` in `plugin.yaml`. Replace the examples in `CHANGELOG.md` with actual English release notes under a `## [version] - YYYY-MM-DD` heading.
-2. Commit the changes, then create and push a matching `v<version>` tag, such as `v0.1.0`.
-3. The `Release` workflow fetches the latest SDK, builds its matching CLI, runs tests, and packages linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, and windows/amd64. It uploads the archives and publishes the version's release notes.
+- [Usage](docs/usage.md) · [Development](docs/development.md) · [Releasing](docs/releasing.md)
+- [Contributing](CONTRIBUTING.md) · [Coding standards](docs/coding-standards.md)
+- [Component development documentation](https://alonabot.github.io/)
 
-Enable GitHub Actions in the generated repository. The tag must match the plugin version, and `source` must match the repository path; the release script stops if either check fails.
-
-## Contribute to the plugin
-
-See the [contribution guide](CONTRIBUTING.md) to add features, fix bugs, or improve documentation.
-
-For more SDK usage, see the [Core plugin guide](https://github.com/AlonaBot/AlonaBot/blob/main/docs/plugin-guide.md).
+[MIT License](LICENSE)

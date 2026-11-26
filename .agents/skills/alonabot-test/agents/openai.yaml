@@ -1,0 +1,5 @@
+# 本文件提供技能选择界面的名称、简述及入口提示。
+interface:
+  display_name: "插件验证"
+  short_description: "按实际风险选择检查；只提交集成测试，其余写在被忽略的本地文件。"
+  default_prompt: "使用 $alonabot-test 完成本次任务。"

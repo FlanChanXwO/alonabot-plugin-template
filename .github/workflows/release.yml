@@ -1,4 +1,4 @@
-# 按版本标签构建模板生成后的组件，并提取 CHANGELOG 发布说明。
+# 按版本标签构建插件五平台归档，并发布双语版本说明。
 name: Release
 
 on:
@@ -31,6 +31,8 @@ jobs:
           env GOTOOLCHAIN="$(go env GOVERSION)" go -C "$(go list -m -f '{{.Dir}}' github.com/AlonaBot/AlonaBot)" install ./cmd/alonabot
 
       - run: go test ./...
+      - run: go vet ./...
+      - run: alonabot check .
 
       - name: Package five platforms
         run: scripts/release.sh "$GITHUB_REF_NAME" "$GITHUB_REPOSITORY"

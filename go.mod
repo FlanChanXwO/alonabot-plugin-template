@@ -1,4 +1,4 @@
-module github.com/owner/alonabot-plugin-template
+module github.com/OWNER/alonabot-plugin-example
 
 go 1.27.3
 

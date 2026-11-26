@@ -14,7 +14,7 @@ jobs:
     if: github.event.pull_request.state == 'open' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR sections and checklist
+      - name: 检查模板段落和确认项
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -23,17 +23,17 @@ jobs:
           // 本脚本校验说明结构；确认项是否真实由审阅者判断。
           import assert from 'node:assert/strict';
 
-          assert.match(process.env.PR_TITLE || '', /^(feat|fix|docs|refactor|test|ci|build|chore|perf|revert)\/[a-z0-9]+(?:-[a-z0-9]+)*: \S.*$/, 'PR 标题须为 type/scope: 摘要');
+          assert.match(process.env.PR_TITLE || '', /^(feat|fix|docs|refactor|test|ci|build|chore|perf|revert)\/[a-z0-9]+(?:-[a-z0-9]+)*: \S.*$/, 'PR title must use type/scope: summary');
 
           // 1. 移除模板提示和代码块，避免提示文字或示例被当作实际说明。
           const body = (process.env.PR_BODY || '')
             .replace(/<!--[\s\S]*?-->/g, '')
-            .replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '[代码块]');
+            .replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '[code block]');
 
           // 2. 每个约定段落都必须有实际内容；接受英文或中文标题，以及中文后的英文后缀。
           for (const heading of ['(?:变更与原因|Changes)', '(?:验证|Verification)', '(?:兼容性与风险|Compatibility and risks)']) {
             const section = body.match(new RegExp(`^## ${heading}(?: / [^\\n]*)?\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'));
-            assert.ok(section && section[1].trim(), `缺少实际说明：${heading}`);
+            assert.ok(section && section[1].trim(), `Missing section content: ${heading}`);
           }
 
           // 3. 对照模板逐项确认，避免用无关勾选绕过必填清单。
@@ -53,6 +53,6 @@ jobs:
             const alternatives = checklist.slice(i, i + 2);
             assert.ok(
               lines.some(line => (line.startsWith('- [x] ') || line.startsWith('- [X] ')) && alternatives.some(item => line.slice(6).startsWith(item))),
-              `尚未确认：${alternatives[0]}`);
+              `Unchecked requirement: ${alternatives[0]}`);
           }
           JS

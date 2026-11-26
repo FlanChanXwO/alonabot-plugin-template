@@ -1,0 +1,5 @@
+# 本文件提供技能选择界面的名称、简述及入口提示。
+interface:
+  display_name: "插件文档"
+  short_description: "维护文档、changelog、代理入口与技能，保持单一权威和中英同步。"
+  default_prompt: "使用 $alonabot-docs 完成本次任务。"

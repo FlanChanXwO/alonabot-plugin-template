@@ -9,3 +9,15 @@ dist/
 .idea/
 .vscode/
 .DS_Store
+
+# 本地验证、工作区与凭据
+*_local_test.go
+*.local.test.ts
+*.local.test.tsx
+tmp/
+.repo/
+.worktrees/
+go.work
+go.work.sum
+.env
+*.env

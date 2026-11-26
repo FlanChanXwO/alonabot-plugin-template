@@ -11,5 +11,5 @@ contact_links:
     url: https://github.com/AlonaBot/AlonaBot/wiki
     about: 按使用、插件开发和贡献任务查找文档。
   - name: 文档 / Documentation
-    url: https://github.com/owner/alonabot-plugin-template/blob/main/docs/usage.md
+    url: https://alonabot.github.io/
     about: 使用问题请先查阅文档。Please check the documentation for usage questions.

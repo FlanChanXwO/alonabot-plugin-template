@@ -1,9 +1,8 @@
-# Bug 报告表单：只收集定位问题所需的最少信息，并指派维护者跟进。
+# Bug 报告表单：只收集定位问题所需的最少信息，由维护者跟进。
 name: Bug 报告 / Bug report
 description: 报告可以复现的问题。Report a problem you can reproduce.
 title: "[Bug] "
 labels: [bug]
-assignees: [owner]
 body:
   - type: markdown
     attributes:
@@ -30,7 +29,7 @@ body:
     id: version
     attributes:
       label: 版本与系统 / Version and OS
-      placeholder: v0.2.0 or commit SHA / 或提交号, linux/amd64
+      placeholder: v0.3.0 or commit SHA / 或提交号, linux/amd64
   - type: textarea
     id: logs
     attributes:

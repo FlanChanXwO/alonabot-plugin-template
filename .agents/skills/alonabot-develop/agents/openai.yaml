@@ -1,0 +1,5 @@
+# 本文件提供技能选择界面的名称、简述及入口提示。
+interface:
+  display_name: "插件开发"
+  short_description: "依据实现归属、调用者与编码规范完成最小而完整的修改。"
+  default_prompt: "使用 $alonabot-develop 完成本次任务。"

@@ -1,4 +1,4 @@
-package plugin
+package example
 
 import (
 	"testing"
@@ -6,23 +6,21 @@ import (
 	"github.com/AlonaBot/AlonaBot/plugintest"
 )
 
-// TestCommands 用真实 Core 与测试 Adapter 走一遍全部命令。
+// TestCommands 通过真实 Core 与测试 Adapter 验证命令和配置。
 func TestCommands(t *testing.T) {
-	p := New()
-	h := plugintest.Start(t, plugintest.Plugin(p))
-	user := plugintest.User{ID: "alice"}
-	chat := plugintest.Private(user.ID)
-
-	reply := func(text string) string {
-		t.Helper()
-		result := h.Text(chat, user, text)
-		if len(result.Sends) != 1 {
-			t.Fatalf("%s: sends = %+v, want 1", text, result)
-		}
-		return result.Sends[0].Text()
-	}
-
-	if got := reply("/hello"); got != "Hello AlonaBot" {
-		t.Errorf("/hello = %q", got)
+	for _, scenario := range []struct {
+		name   string
+		config string
+		want   string
+	}{
+		{name: "default", config: `{}`, want: "Hello AlonaBot"},
+		{name: "configured", config: `{"recipient":"World"}`, want: "Hello World"},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			p := New()
+			h := plugintest.Start(t, plugintest.Plugin(p), plugintest.Config(p, scenario.config))
+			user := plugintest.User{ID: "example-user"}
+			h.Text(plugintest.Private(user.ID), user, "/hello").RequireReply(t, scenario.want)
+		})
 	}
 }
