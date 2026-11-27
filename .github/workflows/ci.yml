@@ -38,7 +38,7 @@ jobs:
               .agents/skills/*/SKILL.md|.agents/skills/*/agents/openai.yaml)
                 ;;
               # 个人维护资料。
-              .agents/*|spec/*|docs/adr/*|docs/goals/*|docs/execution-order.md|docs/benchmarks.md|maintenance/*|goal-[0-9]*/*)
+              .agents/*|spec/*|docs/specs/*|docs/adr/*|docs/goals/*|docs/execution-order.md|docs/benchmarks.md|maintenance/*|goal-[0-9]*/*)
                 printf 'main contains personal maintenance files: %q\n' "$path"
                 rejected=1
                 ;;
